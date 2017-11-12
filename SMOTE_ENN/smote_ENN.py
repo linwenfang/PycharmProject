@@ -23,7 +23,7 @@ labels=np.array([int(x) for x in labels])
 file.close()
 X=features
 y=labels
-sm = SMOTEENN()
+sm = SMOTEENN()#
 X_resampled, y_resampled = sm.fit_sample(X, y)
 y_resampled=y_resampled[:,np.newaxis]
 resampled=np.hstack((X_resampled,y_resampled)).tolist()

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+</head>
+<body>
+<h1>Hello World!</h1>
+<hr>
+<a href="/book/">BookList</a>
+<hr>
+{% for foo in list %}
+<h1>{{ foo }}</h1>
+{% endfor %}
+
+</body>
+</html>

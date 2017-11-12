@@ -1317,7 +1317,6 @@
 # #            ncol=1, labelspacing=0.)
 # # plt.tight_layout()
 # # plt.show()
-from sklearn.tree.tree import DecisionTreeClassifier
-from sklearn.ensemble.forest import check_random_state
+
 
 

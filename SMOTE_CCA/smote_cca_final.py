@@ -3,7 +3,7 @@ from imblearn.over_sampling import SMOTE
 import re
 import numpy as np
 import random
-
+import os
 
 class Basic:
     '''加载样本'''
@@ -245,16 +245,41 @@ class CCA:
 
         fd.close()
         fw.close()
+'''循环多次采样'''
+class Director:
+
+    def run_dir(self, path_original, path_saveNew):
+
+        pathdir_original = os.listdir(path_original)  # 列出原始样本文件夹下的文件名和文件夹名
+        for name in pathdir_original:#对文件名进行循环
+            if os.path.isfile(path_original + "\\" + name):#如果name是一个文件，这里传入的路径必须是绝对路径才可以判断
+                dataSet = based.loadSample(path_original + "\\" + name)#加载文件数据
+                X, y = based.Split(dataSet)#方便smote采样
+                for i in range(m):#循环采样，每一次采样结果存放在for_i文件夹下
+                    sm.My_smote(X, y, path_saveNew + '\\for_'+str(i+1)+'\\re_SMOTE_' + name)
+                    '''cca传入reamote的目录，recca的目录，delcca的目录'''
+                    cca.My_cca(path_saveNew+"\\for_"+str(i+1)+'\\re_SMOTE_' + name,
+                               path_saveNew+"\\for_"+str(i+1)+'\\re_CCA_' + name,
+                               path_saveNew+"\\for_"+str(i+1)+'\\del_CCA_' + name)
+
+            else:#如果name是一个文件夹
+                path1 = path_originial + "\\" + name#更新原始数据集路径
+                os.mkdir(path_saveNew + "\\" + name)#创建和原始数据集文件夹一致的文件夹，用于保存采样的结果
+                path2 = path_saveNew + "\\" + name#更新保存数据的路径为新创建的文件夹
+                for i in range(m):#在这个文件夹中创建存放每一次循环采样结果的文件夹
+                    os.mkdir(path2+"\\for_"+str(i+1))
+                self.run_dir(path1, path2)#调用循环采样的方法，循环调用
+
+
 if __name__ == '__main__':
     based = Basic()
     sm = Smote()
-    dataSet = based.loadSample('C:\\Users\Administrator\Desktop\DataSet_Original\MWSMOTE\\abalone_0_18_9.csv')
-    # print(dataSet[0])
-    X, y = based.Split(dataSet)
-    # print(type(X))
-    # print(type(y))
-    sm.My_smote(X, y, 'E:\PycharmProjects\Learning_Notes\SMOTE_CCA\MWSMOTE\\re_SMOTE_abalone_0_18_9.csv')
     cca=CCA()
-    cca.My_cca('E:\PycharmProjects\Learning_Notes\SMOTE_CCA\MWSMOTE\\re_SMOTE_abalone_0_18_9.csv',
-               'E:\PycharmProjects\Learning_Notes\SMOTE_CCA\MWSMOTE\\re_CCA_abalone_0_18_9.csv',
-               'E:\PycharmProjects\Learning_Notes\SMOTE_CCA\MWSMOTE\\del_CCA_abalone_0_18_9.csv')
+    '''只需传入原始数据集路径和存放采样过后的数据集路径即可'''
+    path_originial=""#存放原始数据文件的文件夹
+    path_saveNew=""#存放新采样过后的文件的文件夹
+    D=Director()
+    m = int(input("请输入采样次数："))
+    D.run_dir(path_originial, path_saveNew)
+
+

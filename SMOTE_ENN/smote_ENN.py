@@ -47,7 +47,7 @@ class SMOTE_ENN:
                     X_resampled, y_resampled = sm.fit_sample(X, y)
                     y_resampled = y_resampled[:, np.newaxis]
                     resampled = np.hstack((X_resampled, y_resampled)).tolist()
-                    self.write_resample(path_saveNew + '\\for_' + str(i + 1) + '\\re_SMOTE_ENN_' + name, resampled)
+                    self.write_resample(path_saveNew + '\\for_' + str(i + 1) + '\\re_SMOTE_ENN_' + name, resampled)#将resample写入文件
             else:  # 如果name是一个文件夹
                 path1 = path_original + "\\" + name  # 更新原始数据集路径
                 os.mkdir(path_saveNew + "\\" + name)  # 创建和原始数据集文件夹一致的文件夹，用于保存采样的结果

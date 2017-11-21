@@ -1,58 +1,58 @@
-# import numpy as np
-# TP=int(input('TP='))
-# FP=int(input('FP='))
-# TN=int(input('TN='))
-# FN=int(input('FN='))
-# Gmeas=np.sqrt((TP/(TP+FP))*(TN/(TN+FN)))
-# print(Gmeas)
-import os
+#coding=gbk
 import re
+import os
 
-os.chdir('C:\\Users\windows\Desktop\weka_arff\SMOTE_TomekLink\SMOTE_Tomek')
-pathdir_old = os.listdir()
-for fileName_old in pathdir_old:
-    if fileName_old[-5:] == '.arff':
-        continue
-    else:
-        os.renames(fileName_old, fileName_old[:-4] + '.arff')  # æ”¹æ–‡ä»¶å
-pathdir_new = os.listdir()
-for fileName_new in pathdir_new:
-    f_r = open(fileName_new, 'r')  # è¯»å–æ–‡ä»¶
-    dataSet = f_r.readlines()
-    numAttribute = len(re.split(r'[\s,\t]+', dataSet[0].strip()))  # å±æ€§åˆ—çš„ä¸ªæ•°
-    f_r.close()
-    '''è¯»å–æ–‡ä»¶'''
-    f_r = open(fileName_new, 'r')
-    inData = f_r.readlines()  # è¯»å–æ–‡ä»¶æ•°æ®ï¼Œä»¥åˆ—è¡¨å½¢å¼è¿”å›
-    dataSet = list()  # ç”¨äºå­˜å‚¨æ ¼å¼åŒ–ä¹‹åçš„æ•°æ®
-    for line in inData:
-        line = line.strip()  # å°†lineå¼€å¤´å’Œç»“å°¾çš„ç©ºè¡Œå»æ‰
-        strList = re.split(r'[\s,\t]+', line)  # strListä¸ºè¿”å›çš„åˆ—è¡¨,åˆ—è¡¨ä¸­çš„å…ƒç´ ä¸ºstrç±»å‹
-        '''å°†strListä¸­çš„strç±»å‹çš„å…ƒç´ è½¬æ¢ä¸ºfloatç±»å‹ï¼Œæ–¹ä¾¿è®¡ç®—'''
-        numList = list()
-        for item in strList:
-            num = float(item)
-            numList.append(num)
-        dataSet.append(numList)
-    f_r.close()
-    '''å†™å…¥æ–‡ä»¶'''
-    f_w = open(fileName_new, 'w')
-    '''arffæ ¼å¼å†™å…¥'''
-    f_w.write('% Title: '+fileName_new+'\n\n')
-    f_w.write('@RELATION '+fileName_new+'\n\n')
-    for i in range(numAttribute-1):
-        f_w.write('@ATTRIBUTE '+str(i+1)+' NUMERIC\n')
-    f_w.write('@ATTRIBUTE class {0,1}\n\n')
-    f_w.write('@data\n')
-    for i in range(len(dataSet)):  # å› ä¸ºä¹‹å‰åœ¨ç¬¬ä¸€è¡ŒåŠ äº†12345.ã€‚ã€‚æ‰€ä»¥è¦åˆ å»
-        if i == -1:
-            continue
-        else:
-            for j in range(len(dataSet[i])):
-                if j < len(dataSet[i]) - 1:
-                    f_w.write(str(dataSet[i][j]) + ',')
+def run_dir(path_original, path_saveNew):
+    pathdir_original = os.listdir(path_original)  # ÁĞ³öÔ­Ê¼Ñù±¾ÎÄ¼ş¼ĞÏÂµÄÎÄ¼şÃûºÍÎÄ¼ş¼ĞÃû
+    for name in pathdir_original:  # ¶ÔÎÄ¼şÃû½øĞĞÑ­»·
+        if os.path.isfile(path_original + "\\" + name):  # Èç¹ûnameÊÇÒ»¸öÎÄ¼ş£¬ÕâÀï´«ÈëµÄÂ·¾¶±ØĞëÊÇ¾ø¶ÔÂ·¾¶²Å¿ÉÒÔÅĞ¶Ï
+            if name[-5:]=='.arff':
+                continue
+            else:
+                os.rename(path_original + "\\" + name,path_original + "\\" + name[:-4]+'.arff')# ¸ÄÎÄ¼şÃû
+            '''¶ÁÈ¡ÎÄ¼ş'''
+            f_r = open(path_original+ "\\" + name[:-4]+'.arff', 'r')
+            inData = f_r.readlines()  # ¶ÁÈ¡ÎÄ¼şÊı¾İ£¬ÒÔÁĞ±íĞÎÊ½·µ»Ø
+            numAttribute = len(re.split(r'[\s,\t]+', inData[0].strip()))  # ÊôĞÔÁĞµÄ¸öÊı
+            dataSet = list()  # ÓÃÓÚ´æ´¢¸ñÊ½»¯Ö®ºóµÄÊı¾İ
+            for line in inData:
+                line = line.strip()  # ½«line¿ªÍ·ºÍ½áÎ²µÄ¿ÕĞĞÈ¥µô
+                strList = re.split(r'[\s,\t]+', line)  # strListÎª·µ»ØµÄÁĞ±í,ÁĞ±íÖĞµÄÔªËØÎªstrÀàĞÍ
+                '''½«strListÖĞµÄstrÀàĞÍµÄÔªËØ×ª»»ÎªfloatÀàĞÍ£¬·½±ã¼ÆËã'''
+                numList = list()
+                for item in strList:
+                    num = float(item)
+                    numList.append(num)
+                dataSet.append(numList)
+            f_r.close()
+            '''Ğ´ÈëÎÄ¼ş'''
+            f_w = open(path_saveNew+ "\\" + name[:-4]+'.arff', 'w')
+            '''arff¸ñÊ½Ğ´Èë'''
+            f_w.write('% Title: ' + path_saveNew+ "\\" + name + '\n\n')
+            f_w.write('@RELATION ' + path_saveNew+ "\\" + name + '\n\n')
+            for i in range(numAttribute - 1):
+                f_w.write('@ATTRIBUTE ' + str(i + 1) + ' NUMERIC\n')
+            f_w.write('@ATTRIBUTE class {0,1}\n\n')
+            f_w.write('@data\n')
+            for i in range(len(dataSet)):  # ÒòÎªÖ®Ç°ÔÚµÚÒ»ĞĞ¼ÓÁË12345.¡£¡£ËùÒÔÒªÉ¾È¥
+                if i == -1:
+                    continue
                 else:
-                    f_w.write(str(int(dataSet[i][j])))
-        f_w.write('\n')
-    f_w.close()
+                    for j in range(len(dataSet[i])):
+                        if j < len(dataSet[i]) - 1:
+                            f_w.write(str(dataSet[i][j]) + ',')
+                        else:
+                            f_w.write(str(int(dataSet[i][j])))
+                f_w.write('\n')
+            f_w.close()
 
+        else:  # Èç¹ûnameÊÇÒ»¸öÎÄ¼ş¼Ğ
+            path1 = path_original + "\\" + name  # ¸üĞÂÔ­Ê¼Êı¾İ¼¯Â·¾¶
+            os.mkdir(path_saveNew + "\\" + name)  # ´´½¨ºÍÔ­Ê¼Êı¾İ¼¯ÎÄ¼ş¼ĞÒ»ÖÂµÄÎÄ¼ş¼Ğ£¬ÓÃÓÚ±£´æ²ÉÑùµÄ½á¹û
+            path2 = path_saveNew + "\\" + name  # ¸üĞÂ±£´æÊı¾İµÄÂ·¾¶ÎªĞÂ´´½¨µÄÎÄ¼ş¼Ğ
+            run_dir(path1, path2)  # µ÷ÓÃÑ­»·²ÉÑùµÄ·½·¨£¬Ñ­»·µ÷ÓÃ
+if __name__ == '__main__':
+
+    path_original="C:\\Users\Administrator\Desktop\\Original_dataset - ¸±±¾"
+    path_saveNew="C:\\Users\Administrator\Desktop\\test_dic"
+    run_dir(path_original,path_saveNew)

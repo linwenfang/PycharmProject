@@ -3,7 +3,7 @@ from imblearn.over_sampling import ADASYN
 import numpy as np
 import re
 import os
-
+from LearningText import toArff
 
 # Generate the dataset
 class Ada:
@@ -60,8 +60,9 @@ class Ada:
 
 if __name__ == '__main__':
     m = int(input("请输入采样次数："))
-    path_originial = "C:\\Users\Administrator\Desktop\\test_dic"  # 存放原始数据文件的文件夹
-    path_saveNew = "C:\\Users\Administrator\Desktop\\re_test"  # 存放新采样过后的文件的文件夹
+    path_originial = "C:\\Users\Administrator\Desktop\\Original_dataset - 副本"  # 存放原始数据文件的文件夹
+    path_saveNew = "C:\\Users\Administrator\Desktop\\test_dic"  # 存放新采样过后的文件的文件夹
     ada_syn = Ada()
     ada = ADASYN()
     ada_syn.run_dir(path_originial, path_saveNew)  # 传入原始数据集文件夹和保存重采样数据集文件夹即可
+    toArff.run_dir(path_saveNew,"C:\\Users\Administrator\Desktop\\test_dic_arff")

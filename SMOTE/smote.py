@@ -4,7 +4,7 @@ import numpy as np
 import re
 
 
-file = open("C:\\Users\Administrator\Desktop\DataSet_Original\MWSMOTE\\abalone_0_18_9.csv", 'r')
+file = open("C:\\Users\Administrator\Desktop\Original_dataset20171121\SMOTE+TonekLink\Letter_0_A.csv", 'r')
 '''读取文件的内容，readlines返回的是一个列表'''
 contain = file.readlines()
 count = len(contain)  # 这是文件共有count行
@@ -36,7 +36,7 @@ X_resampled=X_resampled[0]
 y_resampled=y_resampled[:,np.newaxis]
 
 resampled=np.hstack((X_resampled,y_resampled)).tolist()
-f=open("re_SMOTE_abalone_0_18_9.csv",'w')
+f=open("re_SMOTE_Letter_0_A.csv",'w')
 for i in range(len(resampled)):
     for j in range(len(resampled[i])):
         if j<len(resampled[i])-1:

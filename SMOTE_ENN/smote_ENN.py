@@ -29,6 +29,14 @@ class SMOTE_ENN:
 
     def write_resample(self, path, resampled):
         f = open(path, 'w')
+
+        '''arff格式写入'''
+        f.write('% Title: ' + path + '\n\n')
+        f.write('@RELATION ' + path+ '\n\n')
+        for i in range(len(resampled) - 1):
+            f.write('@ATTRIBUTE ' + str(i + 1) + ' NUMERIC\n')
+        f.write('@ATTRIBUTE class {0,1}\n\n')
+        f.write('@data\n')
         for i in range(len(resampled)):
             for j in range(len(resampled[i])):
                 if j < len(resampled[i]) - 1:
@@ -47,7 +55,8 @@ class SMOTE_ENN:
                     X_resampled, y_resampled = sm.fit_sample(X, y)
                     y_resampled = y_resampled[:, np.newaxis]
                     resampled = np.hstack((X_resampled, y_resampled)).tolist()
-                    self.write_resample(path_saveNew + '\\for_' + str(i + 1) + '\\re_SMOTE_ENN_' + name, resampled)#将resample写入文件
+
+                    self.write_resample(path_saveNew + '\\for_' + str(i + 1) + '\\re_SMOTE_ENN_' + name[:-4]+'.arff', resampled)#将resample写入文件
             else:  # 如果name是一个文件夹
                 path1 = path_original + "\\" + name  # 更新原始数据集路径
                 os.mkdir(path_saveNew + "\\" + name)  # 创建和原始数据集文件夹一致的文件夹，用于保存采样的结果
@@ -59,8 +68,8 @@ class SMOTE_ENN:
 
 if __name__ == '__main__':
     m = int(input("请输入采样次数："))
-    path_originial = "C:\\Users\Administrator\Desktop\\test_dic"  # 存放原始数据文件的文件夹
-    path_saveNew = "C:\\Users\Administrator\Desktop\\re_test"  # 存放新采样过后的文件的文件夹
+    path_originial = "C:\\Users\Administrator\Desktop\Original_dataset - 副本"  # 存放原始数据文件的文件夹
+    path_saveNew = "C:\\Users\Administrator\Desktop\\test_dic"  # 存放新采样过后的文件的文件夹
     smoteenn=SMOTE_ENN()
     sm=SMOTEENN()
     smoteenn.run_dir(path_originial, path_saveNew)  # 传入原始数据集文件夹和保存重采样数据集文件夹即可

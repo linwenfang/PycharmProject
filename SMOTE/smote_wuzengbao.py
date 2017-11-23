@@ -24,9 +24,9 @@ class Smote:
     	if self.N<100:  ######################################
     		old_n_sample=self.n_samples
     		print('old_n_sample',old_n_sample)
-    		self.n_samples=int(float(self.N)/100*old_n_samples)
+    		self.n_samples=int(float(self.N)/100*old_n_sample)
     		print ('n_samples', self.n_samples)
-    		keep=np.random.permutation(old_n_samples)[:self.n_samples]  #permutation:返回一个序列的随机排列或返回一个随机排列的范围
+    		keep=np.random.permutation(old_n_sample)[:self.n_samples]  #permutation:返回一个序列的随机排列或返回一个随机排列的范围
     		print ('keep', keep)
     		new_samples=self.samples[keep]
     		print ('new_samples', new_samples)

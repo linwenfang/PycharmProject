@@ -28,8 +28,8 @@ def run_dir(path_original, path_saveNew):
             '''写入文件'''
             f_w = open(path_saveNew+ "\\" + name[:-4]+'.arff', 'w')
             '''arff格式写入'''
-            f_w.write('% Title: ' + path_saveNew+ "\\" + name + '\n\n')
-            f_w.write('@RELATION ' + path_saveNew+ "\\" + name + '\n\n')
+            f_w.write('% Title: ' + path_saveNew+ "\\" + name[:-4]+'.arff' + '\n\n')
+            f_w.write('@RELATION ' + path_saveNew+ "\\" + name[:-4]+'.arff' + '\n\n')
             for i in range(numAttribute - 1):
                 f_w.write('@ATTRIBUTE ' + str(i + 1) + ' NUMERIC\n')
             f_w.write('@ATTRIBUTE class {0,1}\n\n')
@@ -53,6 +53,6 @@ def run_dir(path_original, path_saveNew):
             run_dir(path1, path2)  # 调用循环采样的方法，循环调用
 if __name__ == '__main__':
 
-    path_original="C:\\Users\Administrator\Desktop\\Original_dataset - 副本"
-    path_saveNew="C:\\Users\Administrator\Desktop\\test_dic"
+    path_original="C:\\Users\Administrator\Desktop\\test_dic"
+    path_saveNew="C:\\Users\Administrator\Desktop\\test_dic_arff"
     run_dir(path_original,path_saveNew)

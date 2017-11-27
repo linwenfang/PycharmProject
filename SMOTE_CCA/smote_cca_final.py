@@ -4,10 +4,9 @@ import re
 import numpy as np
 import random
 import os
-
+from LearningText import toArff
 class Basic:
     '''加载样本'''
-
     def loadSample(self, filename):
         f = open(filename, 'r')  # 打开文件
         inData = f.readlines()  # 读取文件数据，以列表形式返回
@@ -62,7 +61,7 @@ class Smote:
                 if j < len(resampled[i]) - 1:
                     f.write(str(resampled[i][j]) + ',')
                 else:
-                    f.write(str(resampled[i][j]))
+                    f.write(str(int(resampled[i][j])))
             f.write('\n')
         f.close()
 
@@ -156,7 +155,9 @@ class CCA:
     '''
 
     def find_d1(self, t, s, I, I1, dataSet):
-        d1 = float('-inf')
+        # d1 = float('-inf')
+        m = (t + 1) % len(I)
+        d1 = self.inner_product(dataSet[s][:-1], dataSet[m][:-1])  # 求异类最近时的初始化d1
         # 计算异类中与t类中标号为s的样本的内积，返回最大的内积
         for i in I.keys():  # 循环类标
             if i != t:  # 异类中搜索
@@ -180,7 +181,8 @@ class CCA:
     '''
 
     def find_d2(self, t, s, I, d1, dataSet):
-        d2 = float('inf')  # 初始化内积为无穷大
+        # d2 = float('inf')  # 初始化内积为无穷大
+        d2 = self.inner_product(dataSet[s][:-1], dataSet[s][:-1])  # 求同类最远时的初始化d2
         for i in range(len(I[t])):
             x = self.inner_product(dataSet[s][:-1], dataSet[I[t][i]][:-1])  # t类中下标为s和下表为i的样本的内积
             if x > d1:  # 同类最远要以异类最近为界，在最近异类点的范围内找最远的同类样本
@@ -215,14 +217,21 @@ class CCA:
         cInfo.append(c)
         '''保存覆盖信息'''
         if len(cc) == 1:  # 写入覆盖中样本数维1的样本，也就是要清除的样本
-            fd.write(str(dataSetOriginal[cc[0]]) + '\n')
+            for i in cc:  # 写入最终保留下来的样本
+                for j in range(len(dataSetOriginal[i])):
+                    if j < len(dataSetOriginal[i]) - 1:
+                        fd.write(str(dataSetOriginal[i][j]) + ',')
+                    else:
+                        fd.write(str(int(dataSetOriginal[i][j])))
+                fd.write('\n')
+            # fd.write(str(dataSetOriginal[cc[0]][1:-1]) + '\n')
         else:
             for i in cc:  # 写入最终保留下来的样本
                 for j in range(len(dataSetOriginal[i])):
                     if j < len(dataSetOriginal[i]) - 1:
                         fw.write(str(dataSetOriginal[i][j]) + ',')
                     else:
-                        fw.write(str(dataSetOriginal[i][j]))
+                        fw.write(str(int(dataSetOriginal[i][j])))
                 fw.write('\n')
 
     def My_cca(self, load_file, re_sampled_file, del_sambled_file):
@@ -256,14 +265,16 @@ class Director:
                 dataSet = based.loadSample(path_original + "\\" + name)#加载文件数据
                 X, y = based.Split(dataSet)#方便smote采样
                 for i in range(m):#循环采样，每一次采样结果存放在for_i文件夹下
+                    sm=Smote()
                     sm.My_smote(X, y, path_saveNew + '\\for_'+str(i+1)+'\\re_SMOTE_' + name)
                     '''cca传入reamote的目录，recca的目录，delcca的目录'''
+                    cca = CCA()
                     cca.My_cca(path_saveNew+"\\for_"+str(i+1)+'\\re_SMOTE_' + name,
                                path_saveNew+"\\for_"+str(i+1)+'\\re_CCA_' + name,
                                path_saveNew+"\\for_"+str(i+1)+'\\del_CCA_' + name)
 
             else:#如果name是一个文件夹
-                path1 = path_originial + "\\" + name#更新原始数据集路径
+                path1 = path_original + "\\" + name#更新原始数据集路径
                 os.mkdir(path_saveNew + "\\" + name)#创建和原始数据集文件夹一致的文件夹，用于保存采样的结果
                 path2 = path_saveNew + "\\" + name#更新保存数据的路径为新创建的文件夹
                 for i in range(m):#在这个文件夹中创建存放每一次循环采样结果的文件夹
@@ -273,13 +284,20 @@ class Director:
 
 if __name__ == '__main__':
     based = Basic()
-    sm = Smote()
-    cca=CCA()
-    '''只需传入原始数据集路径和存放采样过后的数据集路径即可'''
-    path_originial=""#存放原始数据文件的文件夹
-    path_saveNew=""#存放新采样过后的文件的文件夹
-    D=Director()
-    m = int(input("请输入采样次数："))
-    D.run_dir(path_originial, path_saveNew)
-
-
+    # sm = Smote()
+    # dataSet = based.loadSample('C:\\Users\Administrator\Desktop\Original_dataset - 副本\EasyEnsemble\\abalone_0_7.csv')
+    # # print(dataSet[0])
+    # X, y = based.Split(dataSet)
+    # print(type(X))
+    # print(type(y))
+    # sm.My_smote(X, y, 'C:\\Users\Administrator\Desktop\\test_dic\EasyEnsemble\\re_SMOTE_abalone_0_7.csv')
+    # cca=CCA()
+    # cca.My_cca('C:\\Users\Administrator\Desktop\\test_dic\EasyEnsemble\\re_SMOTE_abalone_0_7.csv',
+    #            'C:\\Users\Administrator\Desktop\\test_dic\EasyEnsemble\\re_cca_abalone_0_7.csv',
+    #            'C:\\Users\Administrator\Desktop\\test_dic\EasyEnsemble\\del_cca_abalone_0_7.csv')
+    m=int(input("请输入循环次数："))
+    path_original='C:\\Users\Administrator\Desktop\Original_dataset - 副本'
+    path_saveNew='C:\\Users\Administrator\Desktop\\test_dic'
+    dic=Director()
+    dic.run_dir(path_original,path_saveNew)
+    toArff.run_dir(path_saveNew,'C:\\Users\Administrator\Desktop\\test_dic_arff')

@@ -198,7 +198,7 @@ def grabTree(filename):
 #    return dataSet, features
 
 def createDataSet():
-    path = r'E:\work\train.txt'
+    path = r'C:\Users\Administrator\Desktop\re_smotetl\EasyEnsemble\for_1\re_SMOTE_Tomek_abalone_0_7.csv'
     dataSet = np.loadtxt(path, delimiter=',')
     dataSet = dataSet.tolist()
     features = [dataSet[0][i] for i in range(len(dataSet[0]) - 1)]
@@ -221,7 +221,7 @@ def createDataSet():
 #    return testSet,label
 
 def createTestSet():
-    path = r'E:\work\test.txt'
+    path = r'C:\Users\Administrator\Desktop\re_smotetl\EasyEnsemble\for_1\re_SMOTE_Tomek_abalone_0_7.csv'
     testSet = np.loadtxt(path, delimiter=',')
     testSet = testSet.tolist()
     return testSet

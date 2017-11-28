@@ -1,10 +1,9 @@
-# coding=gbk
-from imblearn.over_sampling import SMOTE
+#coding=gbk
+import random
 import re
 import numpy as np
-import random
-import os
 from LearningText import toArff
+import os
 class Basic:
     '''加载样本'''
     def loadSample(self, filename):
@@ -22,50 +21,6 @@ class Basic:
             dataSet.append(numList)
         f.close()
         return dataSet
-
-    '''将数据处理成np.array格式'''
-
-    def Split(self, dataSet):
-        '''创建一个len(dataSet) x len(dataSet[0].split(','))-1的矩阵,是样本属性的个数'''
-        features = np.zeros((len(dataSet), len(dataSet[0]) - 1))
-        labels = []
-        index = 0
-        for line in dataSet:  # 一行行读数据文件
-            '''将line中的前len(line)-1列加入到矩阵中去'''
-            features[index:] = line[0:len(line) - 1]
-            labels.append(line[-1])  # 最后一列作为类标
-            index += 1
-            '''返回的features为特征矩阵，labels为类别列表'''
-        labels = np.array([int(x) for x in labels])
-        return features, labels
-
-
-class Smote:
-    '''SMOTE过采样'''
-
-    def My_smote(self, X, y, re_filename):
-        X_resampled = []
-        y_resampled = []
-        X_res, y_res = SMOTE(kind='regular').fit_sample(X, y)  # SMOTE过采样
-        # 将过采样的结果处理成numpy.ndarray形式，并且将y_resembled转换成len(X_resemble)x1的数组
-        X_resampled.append(X_res)
-        y_resampled.append(y_res)
-        X_resampled = X_resampled[0]
-        y_resampled = y_resampled[0][:, np.newaxis]
-        # '''将y_resembled和X_resembled合并，转换成list的形式'''
-        resampled = np.hstack((X_resampled, y_resampled)).tolist()
-        # '''将重采样结果写入文件中'''
-        f = open(re_filename, 'w')
-        for i in range(len(resampled)):
-            for j in range(len(resampled[i])):
-                if j < len(resampled[i]) - 1:
-                    f.write(str(resampled[i][j]) + ',')
-                else:
-                    f.write(str(int(resampled[i][j])))
-            f.write('\n')
-        f.close()
-
-
 class CCA:
     '''属性归一化：由于样本属性数值上的差距可能很大，为了消除这种情况对实验结果的影响
     所以将样本属性归一化至[0,1]这个区间内'''
@@ -193,11 +148,13 @@ class CCA:
     '''计算覆盖      t:样本类型     s:样本序号（sui ji qu de fu gai zhong xin）
     I：按样本类标组合的样本字典    I1：覆盖标记   cc：覆盖中的样本序号'''
 
-    def computCover(self, t, s, I, I1, cc, cInfo, dataSet, fw, fd, dataSetOriginal):
+    def computCover(self, t, s, I, I1, cc, cInfo, dataSet, fw, fd,
+                    dataSetOriginal,del_old,del_old_min,del_old_maj):
         d1 = self.find_d1(t, s, I, I1, dataSet)  # 异类最近-->距离最小-->内积最大
         d2 = self.find_d2(t, s, I, d1, dataSet)  # 同类最远-->距离最大-->内积最小
         d = 0.5 * (d1 + d2)  # 覆盖半径,折中半径法
         '''记录覆盖信息'''
+
         c = list()  # [[覆盖中心],覆盖半径,覆盖类别,覆盖样本数]
         c.append(dataSet[s])  # 覆盖中心
         c.append(d)  # 覆盖半径
@@ -216,14 +173,32 @@ class CCA:
         c.append(cov_num)  # 覆盖样本个数
         cInfo.append(c)
         '''保存覆盖信息'''
-        if len(cc) == 1:  # 写入覆盖中样本数维1的样本，也就是要清除的样本
-            for i in cc:  # 写入最终保留下来的样本
+        if len(cc) == 1 and dataSetOriginal[cc[0]][-1]==1:  # 写入覆盖中样本数为1的样本，也就是要清除的样本
+
+            for i in cc:  # 写入删除的样本
+
+                del_old.append(i)#删除的总个数
+                if dataSetOriginal[i][-1] == 0:  # 原始样本中的少数类
+                    del_old_min.append(i)
+                else:
+                    del_old_maj.append(i)  # 原始样本中的多数类
                 for j in range(len(dataSetOriginal[i])):
                     if j < len(dataSetOriginal[i]) - 1:
                         fd.write(str(dataSetOriginal[i][j]) + ',')
                     else:
                         fd.write(str(int(dataSetOriginal[i][j])))
                 fd.write('\n')
+
+
+
+
+
+                # for j in range(len(dataSetOriginal[i])):
+                #     if j < len(dataSetOriginal[i]) - 1:
+                #         fd.write(str(dataSetOriginal[i][j]) + ',')
+                #     else:
+                #         fd.write(str(int(dataSetOriginal[i][j])))
+                # fd.write('\n')
             # fd.write(str(dataSetOriginal[cc[0]][1:-1]) + '\n')
         else:
             for i in cc:  # 写入最终保留下来的样本
@@ -234,27 +209,34 @@ class CCA:
                         fw.write(str(int(dataSetOriginal[i][j])))
                 fw.write('\n')
 
-    def My_cca(self, load_file, re_sampled_file, del_sambled_file):
+    def My_cca(self, load_file, re_sampled_file, del_file,fcca,name):
         basi = Basic()
         dataSet_Original = basi.loadSample(load_file)  # 加载样本
         NormalData = self.Normalization(dataSet_Original)  # 归一化
         unitData = self.Unitization(NormalData)  # 投影
         fw = open(re_sampled_file, 'w')  # 写入最终处理后的文件
-        fd = open(del_sambled_file, 'w')  # 写入cca删除的文件
+        fd = open(del_file, 'w')  # 写入cca删除的原始样本
         I1, I = self.sorData(unitData)  # 先将样本集合中的数据排序，初始化覆盖标记
         cInfo = list()  # [[覆盖中心],覆盖半径,覆盖类别,覆盖样本数]
+        del_old=list()#用于存储清除的样本中，是原始样本的序号
+        del_old_maj = list()
+        del_old_min = list()
         for t in I.keys():  # 循环样本类别
             UnLearnedIdSet = I[t]  # 将I[t](t类样本)中的样本号全部导入UnLearnedIdSet
             while (len(UnLearnedIdSet)):
                 cc = list()  # 覆盖中的样本序号
                 s = random.choice(UnLearnedIdSet)  # 从UnLearnedIdSet中随机选取一个样本号作为覆盖中心
                 self.computCover(t, s, I, I1, cc, cInfo, unitData, fw, fd,
-                                 dataSet_Original)  ##cc是该类中，被覆盖的样本序号，cInfo是得到的覆盖
+                                 dataSet_Original,del_old,del_old_min,del_old_maj)  ##cc是该类中，被覆盖的样本序号，cInfo是得到的覆盖
                 UnLearnedIdSet = list(set(UnLearnedIdSet) ^ set(cc))  # 在UnLearnedIdSet中删除cc中已被覆盖的样本下标
-
+        #[总数，数类的数目，少数类的数目]
+        fcca.write(name + ',')
+        fcca.write(str(len(del_old)) + ',')
+        fcca.write(str(len(del_old_maj)) + ',')
+        fcca.write(str(len(del_old_min)) + '\n')
+        fcca.close()
         fd.close()
         fw.close()
-'''循环多次采样'''
 class Director:
 
     def run_dir(self, path_original, path_saveNew):
@@ -262,16 +244,14 @@ class Director:
         pathdir_original = os.listdir(path_original)  # 列出原始样本文件夹下的文件名和文件夹名
         for name in pathdir_original:#对文件名进行循环
             if os.path.isfile(path_original + "\\" + name):#如果name是一个文件，这里传入的路径必须是绝对路径才可以判断
-                dataSet = based.loadSample(path_original + "\\" + name)#加载文件数据
-                X, y = based.Split(dataSet)#方便smote采样
                 for i in range(m):#循环采样，每一次采样结果存放在for_i文件夹下
-                    sm=Smote()
-                    sm.My_smote(X, y, path_saveNew + '\\for_'+str(i+1)+'\\re_SMOTE_' + name)
-                    '''cca传入reamote的目录，recca的目录，delcca的目录'''
+                    fcca = open(path_saveNew + '\\for_'+str(i+1)+"\\del_cca_info.csv",'a')
+                    '''cca传入原始数据集的目录，recca的目录，delcca的目录'''
                     cca = CCA()
-                    cca.My_cca(path_saveNew+"\\for_"+str(i+1)+'\\re_SMOTE_' + name,
-                               path_saveNew+"\\for_"+str(i+1)+'\\re_CCA_' + name,
-                               path_saveNew+"\\for_"+str(i+1)+'\\del_CCA_' + name)
+                    cca.My_cca(path_original + "\\" + name,#原始cca输入的文件
+                               path_saveNew+"\\for_"+str(i+1)+'\\re_CCA_' + name,#cca重采样之后的文件
+                               path_saveNew+"\\for_"+str(i+1)+'\\del_cca_' + name,#cca采样删除的文件
+                               fcca,name)#用于存储删除的信息
 #
             else:#如果name是一个文件夹
                 path1 = path_original + "\\" + name#更新原始数据集路径
@@ -296,8 +276,8 @@ if __name__ == '__main__':
     #            'C:\\Users\Administrator\Desktop\\test_dic\EasyEnsemble\\re_cca_abalone_0_7.csv',
     #            'C:\\Users\Administrator\Desktop\\test_dic\EasyEnsemble\\del_cca_abalone_0_7.csv')
     m=int(input("请输入循环次数："))
-    path_original='C:\\Users\Administrator\Desktop\Original_dataset - 副本'
-    path_saveNew='C:\\Users\Administrator\Desktop\\test_dic'
+    path_original='C:\\Users\Administrator\Desktop\\Original_dataset20171121'
+    path_saveNew='C:\\Users\Administrator\Desktop\\test_dic_2'
     dic=Director()
     dic.run_dir(path_original,path_saveNew)
-    toArff.run_dir(path_saveNew,'C:\\Users\Administrator\Desktop\\test_dic_arff')
+    toArff.run_dir(path_saveNew,'C:\\Users\Administrator\Desktop\\test_dic_arff_2')

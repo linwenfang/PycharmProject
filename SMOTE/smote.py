@@ -4,7 +4,7 @@ import numpy as np
 import re
 
 
-file = open("C:\\Users\Administrator\Desktop\Original_dataset20171121\SMOTE+TonekLink\Letter_0_A.csv", 'r')
+file = open("E:\PycharmProjects\Learning_Notes\DataSet\\Imbalanced Data.csv", 'r')
 '''读取文件的内容，readlines返回的是一个列表'''
 contain = file.readlines()
 count = len(contain)  # 这是文件共有count行
@@ -35,8 +35,16 @@ y_resampled=y_resampled[0]
 X_resampled=X_resampled[0]
 y_resampled=y_resampled[:,np.newaxis]
 
+tab=[]
+for i in range(len(X_resampled)):
+    if i <len(X):
+        tab.append(0)
+    else:tab.append(1)
 resampled=np.hstack((X_resampled,y_resampled)).tolist()
-f=open("re_SMOTE_Letter_0_A.csv",'w')
+
+
+
+f=open("re_SMOTE_Imbalanced.csv",'w')
 for i in range(len(resampled)):
     for j in range(len(resampled[i])):
         if j<len(resampled[i])-1:
@@ -44,3 +52,8 @@ for i in range(len(resampled)):
         else:f.write(str(resampled[i][j]))
     f.write('\n')
 f.close()
+count=0
+for i in tab:
+    if i==0:
+        count+=1
+print(count)

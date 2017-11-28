@@ -8,6 +8,8 @@ def run_dir(path_original, path_saveNew):
         if os.path.isfile(path_original + "\\" + name):  # 如果name是一个文件，这里传入的路径必须是绝对路径才可以判断
             if name[-5:]=='.arff':
                 continue
+            elif name=='del_smote_info.csv' or name=='del_cca_info.csv':
+                continue
             else:
                 os.rename(path_original + "\\" + name,path_original + "\\" + name[:-4]+'.arff')# 改文件名
             '''读取文件'''

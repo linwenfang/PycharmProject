@@ -1,5 +1,5 @@
 #coding=gbk
-from imblearn.over_sampling import RandomOverSampler
+from imblearn.under_sampling import RandomUnderSampler
 
 import numpy as np
 import re
@@ -7,7 +7,7 @@ import os
 from LearningText import toArff
 
 # Generate the dataset
-class RamOver:
+class RamUnder:
     def loadSample(self, path):
         file = open(path, 'r')
         '''读取文件的内容，readlines返回的是一个列表'''
@@ -46,7 +46,7 @@ class RamOver:
             if os.path.isfile(path_original + "\\" + name):  # 如果name是一个文件，这里传入的路径必须是绝对路径才可以判断
                 X, y = self.loadSample(path_original + "\\" + name)  # 加载文件数据
                 for i in range(m):  # 循环采样，每一次采样结果存放在for_i文件夹下
-                    X_resampled, y_resampled = ros.fit_sample(X, y)
+                    X_resampled, y_resampled = rus.fit_sample(X, y)
                     y_resampled = y_resampled[:, np.newaxis]
                     resampled = np.hstack((X_resampled, y_resampled)).tolist()
                     self.write_resample(path_saveNew + '\\for_' + str(i + 1) + '\\re_ro_' + name, resampled)
@@ -62,11 +62,11 @@ class RamOver:
 if __name__ == '__main__':
     m = int(input("请输入采样次数："))
     path_originial = "E:\\Papers_dataset\\OriginalDataSet"  # 存放原始数据文件的文件夹
-    path_saveNew = "E:\\Papers_dataset\\ResempledDataSet\\ROS"  # 存放新采样过后的文件的文件夹
-    ramdomOver=RamOver()
-    ros = RandomOverSampler()
-    ramdomOver.run_dir(path_originial, path_saveNew)  # 传入原始数据集文件夹和保存重采样数据集文件夹即可
-    toArff.run_dir(path_saveNew,"E:\\Papers_dataset\\ResempledDataSet\\ROS_arff")
+    path_saveNew = "E:\\Papers_dataset\\ResempledDataSet\\RUS"  # 存放新采样过后的文件的文件夹
+    ramdomUnder=RamUnder()
+    rus = RandomUnderSampler()
+    ramdomUnder.run_dir(path_originial, path_saveNew)  # 传入原始数据集文件夹和保存重采样数据集文件夹即可
+    toArff.run_dir(path_saveNew,"E:\\Papers_dataset\\ResempledDataSet\\RUS_arff")
 
 # file = open("C:\\Users\\Administrator\\Desktop\\Original_dataset20171121\\SMOTE+TonekLink\\Flag_0_white.csv", 'r')
 # '''读取文件的内容，readlines返回的是一个列表'''

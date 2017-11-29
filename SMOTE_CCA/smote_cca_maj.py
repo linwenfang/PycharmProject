@@ -205,7 +205,7 @@ class CCA:
     '''计算覆盖      t:样本类型     s:样本序号（sui ji qu de fu gai zhong xin）
     I：按样本类标组合的样本字典    I1：覆盖标记   cc：覆盖中的样本序号'''
 
-    def computCover(self, t, s, I, I1, cc, cInfo, dataSet, fw, fd_old,fd_new,dataSetOriginal,tab,del_new,del_new_maj,del_new_min,del_old,del_old_maj,del_old_min):
+    def computCover(self, t, s, I, I1, cc, cInfo, dataSet, fw, fd_old,dataSetOriginal,del_old,del_old_maj,del_old_min):
         d1 = self.find_d1(t, s, I, I1, dataSet)  # 异类最近-->距离最小-->内积最大
         d2 = self.find_d2(t, s, I, d1, dataSet)  # 同类最远-->距离最大-->内积最小
         d = 0.5 * (d1 + d2)  # 覆盖半径,折中半径法
@@ -231,39 +231,30 @@ class CCA:
         '''保存覆盖信息'''
         if len(cc) == 1 and dataSetOriginal[cc[0]][-1]==1:  # 写入覆盖中样本数为1的样本，也就是要清除的样本
             for i in cc:  # 写入要删除的样本
-                if tab[i]==0:#原始样本标记为0
-                    del_old.append(i)
-                    if dataSetOriginal[i][-1]==0:#原始样本中的少数类
-                        del_old_min.append(i)
-                    else:
-                        del_old_maj.append(i)#原始样本中的多数类
-                    for j in range(len(dataSetOriginal[i])):
-                        if j < len(dataSetOriginal[i]) - 1:
-                            fd_old.write(str(dataSetOriginal[i][j]) + ',')
-                        else:
-                            fd_old.write(str(int(dataSetOriginal[i][j])))
-                    fd_old.write('\n')
-                else:#新合成样本标记为1
-                    del_new.append(i)
-                    if dataSetOriginal[i][-1]==0:#原始样本中的少数类
-                        del_new_min.append(i)
-                    else:
-                        del_new_maj.append(i)#原始样本中的多数类
-                    for j in range(len(dataSetOriginal[i])):
-                        if j < len(dataSetOriginal[i]) - 1:
-                            fd_new.write(str(dataSetOriginal[i][j]) + ',')
-                        else:
-                            fd_new.write(str(int(dataSetOriginal[i][j])))
-                    fd_new.write('\n')
 
-
-                # for j in range(len(dataSetOriginal[i])):
-                #     if j < len(dataSetOriginal[i]) - 1:
-                #         fd.write(str(dataSetOriginal[i][j]) + ',')
+                del_old.append(i)
+                if dataSetOriginal[i][-1]==0:#原始样本中的少数类
+                    del_old_min.append(i)
+                else:
+                    del_old_maj.append(i)#原始样本中的多数类
+                for j in range(len(dataSetOriginal[i])):
+                    if j < len(dataSetOriginal[i]) - 1:
+                        fd_old.write(str(dataSetOriginal[i][j]) + ',')
+                    else:
+                        fd_old.write(str(int(dataSetOriginal[i][j])))
+                fd_old.write('\n')
+                # else:#新合成样本标记为1
+                #     del_new.append(i)
+                #     if dataSetOriginal[i][-1]==0:#原始样本中的少数类
+                #         del_new_min.append(i)
                 #     else:
-                #         fd.write(str(int(dataSetOriginal[i][j])))
-                # fd.write('\n')
-            # fd.write(str(dataSetOriginal[cc[0]][1:-1]) + '\n')
+                #         del_new_maj.append(i)#原始样本中的多数类
+                #     for j in range(len(dataSetOriginal[i])):
+                #         if j < len(dataSetOriginal[i]) - 1:
+                #             fd_new.write(str(dataSetOriginal[i][j]) + ',')
+                #         else:
+                #             fd_new.write(str(int(dataSetOriginal[i][j])))
+                #     fd_new.write('\n')
         else:
             for i in cc:  # 写入最终保留下来的样本
                 for j in range(len(dataSetOriginal[i])):
@@ -273,7 +264,7 @@ class CCA:
                         fw.write(str(int(dataSetOriginal[i][j])))
                 fw.write('\n')
 
-    def My_cca(self, load_file, re_sampled_file, del_old_file,del_new_file,f,tab,name):
+    def My_cca(self, load_file, re_sampled_file, del_old_file,f,name):
         basi = Basic()
 
         dataSet_Original = basi.loadSample(load_file)  # 加载样本
@@ -281,7 +272,6 @@ class CCA:
         unitData = self.Unitization(NormalData)  # 投影
         fw = open(re_sampled_file, 'w')  # 写入最终处理后的文件
         fd_old = open(del_old_file, 'w')  # 写入cca删除的原始样本
-        fd_new=open(del_new_file,'w')#写入cca删除的新和成样本
         I1, I = self.sorData(unitData)  # 先将样本集合中的数据排序，初始化覆盖标记
         cInfo = list()  # [[覆盖中心],覆盖半径,覆盖类别,覆盖样本数]
         del_old=list()#用于存储清除的样本中，是原始样本的序号
@@ -295,8 +285,8 @@ class CCA:
             while (len(UnLearnedIdSet)):
                 cc = list()  # 覆盖中的样本序号
                 s = random.choice(UnLearnedIdSet)  # 从UnLearnedIdSet中随机选取一个样本号作为覆盖中心
-                self.computCover(t, s, I, I1, cc, cInfo, unitData, fw, fd_old,fd_new,
-                                 dataSet_Original,tab,del_new,del_new_maj,del_new_min,del_old,del_old_maj,del_old_min)  ##cc是该类中，被覆盖的样本序号，cInfo是得到的覆盖
+                self.computCover(t, s, I, I1, cc, cInfo, unitData, fw, fd_old,
+                                 dataSet_Original,del_old,del_old_maj,del_old_min)  ##cc是该类中，被覆盖的样本序号，cInfo是得到的覆盖
                 UnLearnedIdSet = list(set(UnLearnedIdSet) ^ set(cc))  # 在UnLearnedIdSet中删除cc中已被覆盖的样本下标
         '''写入smote+cca删除的信息'''
         # [total,new,new_min,new_maj,old,old_min,old_maj]
@@ -309,7 +299,6 @@ class CCA:
         f.write(str(len(del_old_min)) + ',')
         f.write(str(len(del_old_maj)) + '\n')
 
-        fd_new.close()
         fd_old.close()
         fw.close()
 '''循环多次采样'''
@@ -331,9 +320,8 @@ class Director:
                     cca.My_cca(path_saveNew+"\\for_"+str(i+1)+'\\re_SMOTE_' + name,#cca读入的样本
                                path_saveNew+"\\for_"+str(i+1)+'\\re_SMOTE_CCA_' + name,#重采样写入的样本
                                path_saveNew+"\\for_"+str(i+1)+'\\del_old_' + name,#cca删除的样本，其中的原始样本
-                               path_saveNew + "\\for_" + str(i + 1) + '\\del_new_' + name,#cca删除的样本，其中的smote合成的样本
                                f,#清除样本的信息
-                                tab,name)
+                                name)
                     f.close()
 
 #

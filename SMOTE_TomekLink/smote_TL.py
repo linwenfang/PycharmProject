@@ -60,10 +60,10 @@ class SMOTE_TOMEK:
 
 if __name__ == '__main__':
     m = int(input("请输入采样次数："))
-    path_originial = "C:\\Users\Administrator\Desktop\Original_dataset20171121"  # 存放原始数据文件的文件夹
-    path_saveNew = "C:\\Users\Administrator\Desktop\\test_dic"  # 存放新采样过后的文件的文件夹
+    path_originial = "E:\\Papers_dataset\\OriginalDataSet"  # 存放原始数据文件的文件夹
+    path_saveNew = "E:\\Papers_dataset\\ResempledDataSet\\SMOTE_Tomek"  # 存放新采样过后的文件的文件夹
     smotetomek=SMOTE_TOMEK()
     sm = SMOTETomek()
     smotetomek.run_dir(path_originial, path_saveNew)  # 传入原始数据集文件夹和保存重采样数据集文件夹即可
-    toArff.run_dir(path_saveNew,"C:\\Users\Administrator\Desktop\\test_dic_arff")
+    toArff.run_dir(path_saveNew,"E:\\Papers_dataset\\ResempledDataSet\\SMOTE_Tomek_arff")
 

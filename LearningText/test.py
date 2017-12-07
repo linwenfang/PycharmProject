@@ -1244,8 +1244,8 @@
 # # print(str(http,encoding='utf-8'))
 # # #====#=======================================================================================================================
 # import matplotlib.pyplot as plt
-# from sklearn.datasets import make_classification
-# from sklearn.decomposition import PCA
+# from skLearn.datasets import make_classification
+# from skLearn.decomposition import PCA
 # import numpy as np
 # from imblearn.over_sampling import SMOTE
 #

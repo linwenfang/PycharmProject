@@ -276,8 +276,8 @@ if __name__ == '__main__':
     #            'C:\\Users\Administrator\Desktop\\test_dic\EasyEnsemble\\re_cca_abalone_0_7.csv',
     #            'C:\\Users\Administrator\Desktop\\test_dic\EasyEnsemble\\del_cca_abalone_0_7.csv')
     m=int(input("请输入循环次数："))
-    path_original='C:\\Users\Administrator\Desktop\\Original_dataset20171121'
-    path_saveNew='C:\\Users\Administrator\Desktop\\test_dic_2'
+    path_original='E:\Papers_dataset\OriginalDataSet'
+    path_saveNew='E:\Papers_dataset\ResempledDataSet\CCA_maj'
     dic=Director()
     dic.run_dir(path_original,path_saveNew)
-    toArff.run_dir(path_saveNew,'C:\\Users\Administrator\Desktop\\test_dic_arff_2')
+    toArff.run_dir(path_saveNew,'E:\Papers_dataset\ResempledDataSet\CCA_maj_arff')

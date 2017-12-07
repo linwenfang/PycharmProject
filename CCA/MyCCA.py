@@ -3,6 +3,7 @@ import numpy as np
 import re
 import time
 import random
+from skLearn.externals import joblib
 
 '''加载样本'''
 
@@ -390,4 +391,6 @@ if __name__ == '__main__':
     # normalData = Normalization(dataSet)
     # unitData = Unitization(normalData)
     doNfold(dataSet, rej_deal)
+    path="model.txt"
+
 

@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
-from sklearn.datasets import make_classification
-from sklearn.decomposition import PCA
+from skLearn.datasets import make_classification
+from skLearn.decomposition import PCA
 
 from imblearn.ensemble import BalanceCascade
 import numpy as np

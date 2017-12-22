@@ -1,30 +1,20 @@
-#coding=gbk
-import os
-# os.mkdir('liuruiqing')#创建文件夹
-# os.removedirs('liuruiqing')#移除文件夹
-# print(os.getcwd())#获得当前目录
-# for i in range(5):
-#     f_test=open('liu'+str(i)+'.txt','w')
-#     f_test.write('这是第'+str(i)+'个文件')
-#     f_test.close()
-# newName=''
-# for name in os.listdir():
-#     if name[:3]=='liu':
-#         os.remove(name)
+from functools import reduce
+# def splitD(s):
+#
+def char2num(s):
+    digits={'0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9}
+    return digits[s]
+def fun(x,y):
+    return x*10+y
+
+def str2float(s):
+    a=s.split(s)
+    f1=reduce(lambda x,y:x*10+y,map(char2num,a[0]))
+    f2=reduce(fun,map(char2num,a[1]))/(10*len(a[1]))
+    return f1+f2
+s='123.456'
+#
+print(str2float(s))
 
 
-
-
-# f=open("file_tell.txt",'r')
-# str=f.read(3)
-# print(str)
-# position=f.tell()
-# print(position)
-# str=f.read(3)
-# print(str)
-# position=f.tell()
-# print(position)
-# f.seek(0,0)
-# position=f.tell()
-# print(position)
 

@@ -201,7 +201,7 @@ class C45():
 #        return testSet
 #    
     def loadData(self):
-        path=''
+        path='C:\\Users\Administrator\Desktop\\re_20171217 - 副本\\for_9\\re_mwsmote_yeast4.csv'
         dataSet = np.loadtxt(path,delimiter=',')
         dataSet = dataSet.tolist()
         return dataSet

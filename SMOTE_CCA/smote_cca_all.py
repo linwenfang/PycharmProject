@@ -205,7 +205,7 @@ class CCA:
     '''计算覆盖      t:样本类型     s:样本序号（sui ji qu de fu gai zhong xin）
     I：按样本类标组合的样本字典    I1：覆盖标记   cc：覆盖中的样本序号'''
 
-    def computCover(self, t, s, I, I1, cc, cInfo, dataSet, fw, fd_old,fd_new,dataSetOriginal,tab,del_new,del_new_maj,del_new_min,del_old,del_old_maj,del_old_min):
+    def computCover(self, t, s, I, I1, cc, cInfo, dataSet,dataSetOriginal):
         d1 = self.find_d1(t, s, I, I1, dataSet)  # 异类最近-->距离最小-->内积最大
         d2 = self.find_d2(t, s, I, d1, dataSet)  # 同类最远-->距离最大-->内积最小
         d = 0.5 * (d1 + d2)  # 覆盖半径,折中半径法
@@ -228,54 +228,8 @@ class CCA:
                 cov_num += 1  # 覆盖中的样本数加一
         c.append(cov_num)  # 覆盖样本个数
         cInfo.append(c)
-        '''保存覆盖信息'''
-        if len(cc) == 1:  # 写入覆盖中样本数为1的样本，也就是要清除的样本
-            for i in cc:  # 写入要删除的样本
-                if tab[i]==0:#原始样本标记为0
-                    del_old.append(i)
-                    if dataSetOriginal[i][-1]==0:#原始样本中的少数类
-                        del_old_min.append(i)
-                    else:
-                        del_old_maj.append(i)#原始样本中的多数类
-                    for j in range(len(dataSetOriginal[i])):
-                        if j < len(dataSetOriginal[i]) - 1:
-                            fd_old.write(str(dataSetOriginal[i][j]) + ',')
-                        else:
-                            fd_old.write(str(int(dataSetOriginal[i][j])))
-                    fd_old.write('\n')
-                else:#新合成样本标记为1
-                    del_new.append(i)
-                    if dataSetOriginal[i][-1]==0:#原始样本中的少数类
-                        del_new_min.append(i)
-                    else:
-                        del_new_maj.append(i)#原始样本中的多数类
-                    for j in range(len(dataSetOriginal[i])):
-                        if j < len(dataSetOriginal[i]) - 1:
-                            fd_new.write(str(dataSetOriginal[i][j]) + ',')
-                        else:
-                            fd_new.write(str(int(dataSetOriginal[i][j])))
-                    fd_new.write('\n')
-
-
-                # for j in range(len(dataSetOriginal[i])):
-                #     if j < len(dataSetOriginal[i]) - 1:
-                #         fd.write(str(dataSetOriginal[i][j]) + ',')
-                #     else:
-                #         fd.write(str(int(dataSetOriginal[i][j])))
-                # fd.write('\n')
-            # fd.write(str(dataSetOriginal[cc[0]][1:-1]) + '\n')
-        else:
-            for i in cc:  # 写入最终保留下来的样本
-                for j in range(len(dataSetOriginal[i])):
-                    if j < len(dataSetOriginal[i]) - 1:
-                        fw.write(str(dataSetOriginal[i][j]) + ',')
-                    else:
-                        fw.write(str(int(dataSetOriginal[i][j])))
-                fw.write('\n')
-
     def My_cca(self, load_file, re_sampled_file, del_old_file,del_new_file,f,tab,name):
         basi = Basic()
-
         dataSet_Original = basi.loadSample(load_file)  # 加载样本
         NormalData = self.Normalization(dataSet_Original)  # 归一化
         unitData = self.Unitization(NormalData)  # 投影
@@ -290,22 +244,95 @@ class CCA:
         del_old_min=list()
         del_new_maj=list()
         del_new_min=list()
+        cc_list=list()
+        cc_num_min=0
+        cc_num_maj=0
         for t in I.keys():  # 循环样本类别
             UnLearnedIdSet = I[t]  # 将I[t](t类样本)中的样本号全部导入UnLearnedIdSet
             while (len(UnLearnedIdSet)):
                 cc = list()  # 覆盖中的样本序号
                 s = random.choice(UnLearnedIdSet)  # 从UnLearnedIdSet中随机选取一个样本号作为覆盖中心
-                self.computCover(t, s, I, I1, cc, cInfo, unitData, fw, fd_old,fd_new,
-                                 dataSet_Original,tab,del_new,del_new_maj,del_new_min,del_old,del_old_maj,del_old_min)  ##cc是该类中，被覆盖的样本序号，cInfo是得到的覆盖
+                self.computCover(t, s, I, I1, cc, cInfo, unitData,dataSet_Original)  ##cc是该类中，被覆盖的样本序号，cInfo是得到的覆盖
+                cc_list.append(cc)
                 UnLearnedIdSet = list(set(UnLearnedIdSet) ^ set(cc))  # 在UnLearnedIdSet中删除cc中已被覆盖的样本下标
+        '''循环cc_list'''
+        for i in range(len(cc_list)):
+            if len(cc_list[i])==1:# 覆盖中只有一个少数类
+                if dataSet_Original[cc_list[i][0]][-1] == 0:  # 这个样本是少数类样本
+                    cc_num_min += 1  # 覆盖中只有一个少数类的数
+        print("cc_num_min=",cc_num_min)
+        '''删除多数类'''
+        for i in range(len(cc_list)):
+            if len(cc_list[i])==1:#覆盖内只有一个样本
+                if tab[cc_list[i][0]]==0:#原始样本标记为0
+                    if dataSet_Original[cc_list[i][0]][-1]==1:#这个原始样本是多数类样本
+                        cc_num_maj+=1
+                        # del_old.append(cc_list[i][0])#删除的原始样本下标
+                        del_old_maj.append(cc_list[i][0])#删除的多数类样本下标
+                        '''写入删除的多数类'''
+                        for j in range(len(dataSet_Original[cc_list[i][0]])):
+                            if j < len(dataSet_Original[cc_list[i][0]]) - 1:
+                                fd_old.write(str(dataSet_Original[cc_list[i][0]][j]) + ',')
+                            else:
+                                fd_old.write(str(int(dataSet_Original[cc_list[i][0]][j])))
+                        fd_old.write('\n')
+            if cc_num_maj == cc_num_min:
+                print('cc_num_maj=',cc_num_maj)
+                break
+        '''删除少数类'''
+        for i in range(len(cc_list)):
+            if len(cc_list[i])==1:#覆盖内只有一个样本
+                if tab[cc_list[i][0]]==0:#原始样本标记为0
+                    if dataSet_Original[cc_list[i][0]][-1]==0:#这个原始样本是少数类样本
+                        # del_old.append(cc_list[i][0])
+                        del_old_min.append(cc_list[i][0])
+                        '''写入删除的原始少数类样本'''
+                        for j in range(len(dataSet_Original[cc_list[i][0]])):
+                            if j < len(dataSet_Original[cc_list[i][0]]) - 1:
+                                fd_old.write(str(dataSet_Original[cc_list[i][0]][j]) + ',')
+                            else:
+                                fd_old.write(str(int(dataSet_Original[cc_list[i][0]][j])))
+                        fd_old.write('\n')
+                else:#新合成样本
+                    '''删除新合成样本少数类和多数类'''
+                    # del_new.append(cc_list[i][0])#删除的新合成的样本下标
+                    if dataSet_Original[cc_list[i][0]][-1]==0:#新合成的少数类样本
+                        # del_new.append(cc_list[i][0])
+                        del_new_min.append(cc_list[i][0])#删除的新和成的少数类样本下标
+                    else:
+                        del_new_maj.append(cc_list[i][0])#删除的新和成的多数类样本下标
+                    '''写入删除的新合成样本'''
+                    for j in range(len(dataSet_Original[cc_list[i][0]])):
+                        if j < len(dataSet_Original[cc_list[i][0]]) - 1:
+                            fd_new.write(str(dataSet_Original[cc_list[i][0]][j]) + ',')
+                        else:
+                            fd_new.write(str(int(dataSet_Original[cc_list[i][0]][j])))
+                    fd_new.write('\n')
+        '''写入保留下来的样本'''
+        del_list=del_old_maj+del_new_min+del_old_min+del_new_maj#删除样本的下标列表
+        print("del_old_maj=",len(del_old_maj))
+        print("del_new_min=",len(del_new_min))
+        print("del_old_min=",len(del_old_min))
+        print("del_new_maj=",len(del_new_maj))
+
+        ori_list=[i for i in range(len(dataSet_Original))]
+        rew_list=list(set(ori_list).difference(set(del_list)))#在ori_list中的元素，而不再del_list中的元素
+        for i in rew_list:
+            for j in range(len(dataSet_Original[i])):
+                    if j < len(dataSet_Original[i]) - 1:
+                        fw.write(str(dataSet_Original[i][j]) + ',')
+                    else:
+                        fw.write(str(int(dataSet_Original[i][j])))
+            fw.write('\n')
         '''写入smote+cca删除的信息'''
+
         # [total,new,new_min,new_maj,old,old_min,old_maj]
         f.write(name+',')
-        f.write(str(len(del_old)+len(del_new))+',')
-        f.write(str(len(del_new))+',')
+        f.write(str(len(del_list))+',')
+        f.write(str(len(del_new_min)+len(del_new_maj))+',')
         f.write(str(len(del_new_min)) + ',')
         f.write(str(len(del_new_maj)) + ',')
-        f.write(str(len(del_old))+',')
+        f.write(str(len(del_old_min)+len(del_old_maj))+',')
         f.write(str(len(del_old_min)) + ',')
         f.write(str(len(del_old_maj)) + '\n')
 
@@ -361,8 +388,8 @@ if __name__ == '__main__':
     #            'C:\\Users\Administrator\Desktop\\test_dic\EasyEnsemble\\re_cca_abalone_0_7.csv',
     #            'C:\\Users\Administrator\Desktop\\test_dic\EasyEnsemble\\del_cca_abalone_0_7.csv')
     m=int(input("请输入循环次数："))
-    path_original='E:\\Papers_dataset\\OriginalDataSet'
-    path_saveNew='E:\\Papers_dataset\\ResempledDataSet\\SMOTE_CCA_all'
+    path_original='E:\Papers_dataset\OriginalDataSet'
+    path_saveNew='E:\Papers_dataset\ResempledDataSet\CCA_all_1'
     dic=Director()
     dic.run_dir(path_original,path_saveNew)
-    toArff.run_dir(path_saveNew,'E:\\Papers_dataset\\ResempledDataSet\\SMOTE_CCA_all_arff')
+    toArff.run_dir(path_saveNew,'E:\Papers_dataset\ResempledDataSet\CCA_all_1_arff')

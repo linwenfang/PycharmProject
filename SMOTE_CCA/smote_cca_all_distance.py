@@ -1,14 +1,12 @@
 # coding=gbk
-import random
+from imblearn.over_sampling import SMOTE
 import re
 import numpy as np
-from LearningText import toArff
+import random
 import os
-
-
+from LearningText import toArff
 class Basic:
     '''加载样本'''
-
     def loadSample(self, filename):
         f = open(filename, 'r')  # 打开文件
         inData = f.readlines()  # 读取文件数据，以列表形式返回
@@ -24,6 +22,60 @@ class Basic:
             dataSet.append(numList)
         f.close()
         return dataSet
+
+    '''将数据处理成np.array格式'''
+
+    def Split(self, dataSet):
+        '''创建一个len(dataSet) x len(dataSet[0].split(','))-1的矩阵,是样本属性的个数'''
+        features = np.zeros((len(dataSet), len(dataSet[0]) - 1))
+        labels = []
+        index = 0
+        for line in dataSet:  # 一行行读数据文件
+            '''将line中的前len(line)-1列加入到矩阵中去'''
+            features[index:] = line[0:len(line) - 1]
+            labels.append(line[-1])  # 最后一列作为类标
+            index += 1
+            '''返回的features为特征矩阵，labels为类别列表'''
+        labels = np.array([int(x) for x in labels])
+        return features, labels
+
+
+class Smote:
+    '''SMOTE过采样'''
+    '''给新合成样本和原始样本加了一个标记
+    如果是新合成样本，标记为1
+    如果是原始样本，标记为0'''
+
+
+    def My_smote(self, X, y, re_filename):
+        X_resampled = []
+        y_resampled = []
+        tab=[]#标签
+        X_res, y_res = SMOTE(kind='regular').fit_sample(X, y)  # SMOTE过采样
+        # 将过采样的结果处理成numpy.ndarray形式，并且将y_resembled转换成len(X_resemble)x1的数组
+        X_resampled.append(X_res)
+        y_resampled.append(y_res)
+        X_resampled = X_resampled[0]
+        y_resampled = y_resampled[0][:, np.newaxis]
+        '''为样本打标签'''
+        for i in range(len(X_resampled)):
+            if i < len(X):#原始样本，标记为0
+                tab.append(0)
+            else:#新和成样本，标记为1
+                tab.append(1)
+        # '''将y_resembled和X_resembled合并，转换成list的形式'''
+        resampled = np.hstack((X_resampled, y_resampled)).tolist()
+        # '''将重采样结果写入文件中'''
+        f = open(re_filename, 'w')
+        for i in range(len(resampled)):
+            for j in range(len(resampled[i])):
+                if j < len(resampled[i]) - 1:
+                    f.write(str(resampled[i][j]) + ',')
+                else:
+                    f.write(str(int(resampled[i][j])))
+            f.write('\n')
+        f.close()
+        return tab
 
 
 class CCA:
@@ -48,8 +100,8 @@ class CCA:
             vec_Min.append(minValue)  # 第j列的最小值
         for j in range(len(dataSet[0]) - 1):  # 循環屬性列
             for i in range(len(dataSet)):
-                if vec_Max[j] - vec_Min[j] == 0:
-                    vec_Max[j] = vec_Max[j] + 0.001
+                if vec_Max[j]-vec_Min[j]==0:
+                    vec_Max[j]=vec_Max[j]+0.001
                 '''若第j列的最大值与最小值的差小于10的-6次方,则将第j列的值都设置为0，否则按以下公式计算第j列的值'''
                 if vec_Max[j] - vec_Min[j] < 1e-6:  # 若第j列的最大值与最小值的差小于10的-6次方
                     dataSet[i][j] = (dataSet[i][j] - vec_Min[j]) / (vec_Max[j] - vec_Min[j])
@@ -153,7 +205,7 @@ class CCA:
     '''计算覆盖      t:样本类型     s:样本序号（sui ji qu de fu gai zhong xin）
     I：按样本类标组合的样本字典    I1：覆盖标记   cc：覆盖中的样本序号'''
 
-    def computCover(self, t, s, I, I1, cc, cInfo, dataSet, dataSetOriginal):
+    def computCover(self, t, s, I, I1, cc, cInfo, dataSet,dataSetOriginal):
         d1 = self.find_d1(t, s, I, I1, dataSet)  # 异类最近-->距离最小-->内积最大
         d2 = self.find_d2(t, s, I, d1, dataSet)  # 同类最远-->距离最大-->内积最小
         d = 0.5 * (d1 + d2)  # 覆盖半径,折中半径法
@@ -176,112 +228,152 @@ class CCA:
                 cov_num += 1  # 覆盖中的样本数加一
         c.append(cov_num)  # 覆盖样本个数
         cInfo.append(c)
-
-    def My_cca(self, load_file, re_sampled_file, del_file, fcca, name):
+    def My_cca(self, load_file, re_sampled_file, del_old_file,del_new_file,f,tab,name):
         basi = Basic()
         dataSet_Original = basi.loadSample(load_file)  # 加载样本
         NormalData = self.Normalization(dataSet_Original)  # 归一化
         unitData = self.Unitization(NormalData)  # 投影
         fw = open(re_sampled_file, 'w')  # 写入最终处理后的文件
-        fd = open(del_file, 'w')  # 写入cca删除的原始样本
+        fd_old = open(del_old_file, 'w')  # 写入cca删除的原始样本
+        fd_new=open(del_new_file,'w')#写入cca删除的新和成样本
         I1, I = self.sorData(unitData)  # 先将样本集合中的数据排序，初始化覆盖标记
         cInfo = list()  # [[覆盖中心],覆盖半径,覆盖类别,覆盖样本数]
-        del_old = list()  # 用于存储清除的样本中，是原始样本的序号
-        del_old_maj = list()
-        del_old_min = list()
-        cc_list = list()
-        cc_num_min = 0
-        cc_num_maj = 0
+        del_old=list()#用于存储清除的样本中，是原始样本的序号
+        del_new=list()#用于存储清除的样本中，是新和成的样本的序号
+        del_old_maj=list()
+        del_old_min=list()
+        del_new_maj=list()
+        del_new_min=list()
+        cc_list=list()
+        cc_num_min=0
+        cc_num_maj=0
         for t in I.keys():  # 循环样本类别
             UnLearnedIdSet = I[t]  # 将I[t](t类样本)中的样本号全部导入UnLearnedIdSet
             while (len(UnLearnedIdSet)):
                 cc = list()  # 覆盖中的样本序号
                 s = random.choice(UnLearnedIdSet)  # 从UnLearnedIdSet中随机选取一个样本号作为覆盖中心
-                self.computCover(t, s, I, I1, cc, cInfo, unitData, dataSet_Original)  ##cc是该类中，被覆盖的样本序号，cInfo是得到的覆盖
+                self.computCover(t, s, I, I1, cc, cInfo, unitData,dataSet_Original)  ##cc是该类中，被覆盖的样本序号，cInfo是得到的覆盖
                 cc_list.append(cc)
                 UnLearnedIdSet = list(set(UnLearnedIdSet) ^ set(cc))  # 在UnLearnedIdSet中删除cc中已被覆盖的样本下标
+        '''********************************改**********************************'''
+
         '''循环cc_list'''
         for i in range(len(cc_list)):
-            if len(cc_list[i]) == 1:  # 覆盖中只有一个少数类
+            if len(cc_list[i])==1:# 覆盖中只有一个少数类
                 if dataSet_Original[cc_list[i][0]][-1] == 0:  # 这个样本是少数类样本
                     cc_num_min += 1  # 覆盖中只有一个少数类的数
-        print("cc_num_min=", cc_num_min)
+        print("cc_num_min=",cc_num_min)
         '''删除多数类'''
         for i in range(len(cc_list)):
-            if len(cc_list[i]) == 1:  # 覆盖内只有一个样本
-                if dataSet_Original[cc_list[i][0]][-1] == 1:  # 这个原始样本是多数类样本
-                    cc_num_maj += 1
-                    # del_old.append(cc_list[i][0])#删除的原始样本下标
-                    del_old_maj.append(cc_list[i][0])  # 删除的多数类样本下标
-                    '''写入删除的多数类'''
-                    for j in range(len(dataSet_Original[cc_list[i][0]])):
-                        if j < len(dataSet_Original[cc_list[i][0]]) - 1:
-                            fd.write(str(dataSet_Original[cc_list[i][0]][j]) + ',')
-                        else:
-                            fd.write(str(int(dataSet_Original[cc_list[i][0]][j])))
-                    fd.write('\n')
+            if len(cc_list[i])==1:#覆盖内只有一个样本
+                if tab[cc_list[i][0]]==0:#原始样本标记为0
+                    if dataSet_Original[cc_list[i][0]][-1]==1:#这个原始样本是多数类样本
+                        cc_num_maj+=1
+                        # del_old.append(cc_list[i][0])#删除的原始样本下标
+                        del_old_maj.append(cc_list[i][0])#删除的多数类样本下标
+                        '''写入删除的多数类'''
+                        for j in range(len(dataSet_Original[cc_list[i][0]])):
+                            if j < len(dataSet_Original[cc_list[i][0]]) - 1:
+                                fd_old.write(str(dataSet_Original[cc_list[i][0]][j]) + ',')
+                            else:
+                                fd_old.write(str(int(dataSet_Original[cc_list[i][0]][j])))
+                        fd_old.write('\n')
             if cc_num_maj == cc_num_min:
-                print('cc_num_maj=', cc_num_maj)
+                print('cc_num_maj=',cc_num_maj)
                 break
-            '''删除少数类'''
+        '''删除少数类'''
         for i in range(len(cc_list)):
-            if len(cc_list[i]) == 1:  # 覆盖内只有一个样本
-                if dataSet_Original[cc_list[i][0]][-1] == 0:  # 这个原始样本是少数类样本
-                    # del_old.append(cc_list[i][0])
-                    del_old_min.append(cc_list[i][0])
-                    '''写入删除的原始少数类样本'''
+            if len(cc_list[i])==1:#覆盖内只有一个样本
+                if tab[cc_list[i][0]]==0:#原始样本标记为0
+                    if dataSet_Original[cc_list[i][0]][-1]==0:#这个原始样本是少数类样本
+                        # del_old.append(cc_list[i][0])
+                        del_old_min.append(cc_list[i][0])
+                        '''写入删除的原始少数类样本'''
+                        for j in range(len(dataSet_Original[cc_list[i][0]])):
+                            if j < len(dataSet_Original[cc_list[i][0]]) - 1:
+                                fd_old.write(str(dataSet_Original[cc_list[i][0]][j]) + ',')
+                            else:
+                                fd_old.write(str(int(dataSet_Original[cc_list[i][0]][j])))
+                        fd_old.write('\n')
+                else:#新合成样本
+                    '''删除新合成样本少数类和多数类'''
+                    # del_new.append(cc_list[i][0])#删除的新合成的样本下标
+                    if dataSet_Original[cc_list[i][0]][-1]==0:#新合成的少数类样本
+                        # del_new.append(cc_list[i][0])
+                        del_new_min.append(cc_list[i][0])#删除的新和成的少数类样本下标
+                    else:
+                        del_new_maj.append(cc_list[i][0])#删除的新和成的多数类样本下标
+                    '''写入删除的新合成样本'''
                     for j in range(len(dataSet_Original[cc_list[i][0]])):
                         if j < len(dataSet_Original[cc_list[i][0]]) - 1:
-                            fd.write(str(dataSet_Original[cc_list[i][0]][j]) + ',')
+                            fd_new.write(str(dataSet_Original[cc_list[i][0]][j]) + ',')
                         else:
-                            fd.write(str(int(dataSet_Original[cc_list[i][0]][j])))
-                    fd.write('\n')
-        del_list = del_old_maj +del_old_min  # 删除样本的下标列表
-        print("del_old_maj=", len(del_old_maj))
-        print("del_old_min=", len(del_old_min))
-        ori_list = [i for i in range(len(dataSet_Original))]
-        rew_list = list(set(ori_list).difference(set(del_list)))  # 在ori_list中的元素，而不再del_list中的元素
+                            fd_new.write(str(int(dataSet_Original[cc_list[i][0]][j])))
+                    fd_new.write('\n')
+        '''写入保留下来的样本'''
+        del_list=del_old_maj+del_new_min+del_old_min+del_new_maj#删除样本的下标列表
+        print("del_old_maj=",len(del_old_maj))
+        print("del_new_min=",len(del_new_min))
+        print("del_old_min=",len(del_old_min))
+        print("del_new_maj=",len(del_new_maj))
+
+        ori_list=[i for i in range(len(dataSet_Original))]
+        rew_list=list(set(ori_list).difference(set(del_list)))#在ori_list中的元素，而不再del_list中的元素
         for i in rew_list:
             for j in range(len(dataSet_Original[i])):
-                if j < len(dataSet_Original[i]) - 1:
-                    fw.write(str(dataSet_Original[i][j]) + ',')
-                else:
-                    fw.write(str(int(dataSet_Original[i][j])))
+                    if j < len(dataSet_Original[i]) - 1:
+                        fw.write(str(dataSet_Original[i][j]) + ',')
+                    else:
+                        fw.write(str(int(dataSet_Original[i][j])))
             fw.write('\n')
         '''写入smote+cca删除的信息'''
-        # [总数，多数类的数目，少数类的数目]
-        fcca.write(name + ',')
-        fcca.write(str(len(del_list)) + ',')
-        fcca.write(str(len(del_old_maj)) + ',')
-        fcca.write(str(len(del_old_min)) + '\n')
-        fcca.close()
-        fd.close()
+
+        # [total,new,new_min,new_maj,old,old_min,old_maj]
+        f.write(name+',')
+        f.write(str(len(del_list))+',')
+        f.write(str(len(del_new_min)+len(del_new_maj))+',')
+        f.write(str(len(del_new_min)) + ',')
+        f.write(str(len(del_new_maj)) + ',')
+        f.write(str(len(del_old_min)+len(del_old_maj))+',')
+        f.write(str(len(del_old_min)) + ',')
+        f.write(str(len(del_old_maj)) + '\n')
+
+        fd_new.close()
+        fd_old.close()
         fw.close()
-
-
+'''循环多次采样'''
 class Director:
-    def run_dir(self, path_original, path_saveNew):
 
+    def run_dir(self, path_original, path_saveNew):
+        # global f
         pathdir_original = os.listdir(path_original)  # 列出原始样本文件夹下的文件名和文件夹名
-        for name in pathdir_original:  # 对文件名进行循环
-            if os.path.isfile(path_original + "\\" + name):  # 如果name是一个文件，这里传入的路径必须是绝对路径才可以判断
-                print(path_original + "\\" + name)
-                for i in range(m):  # 循环采样，每一次采样结果存放在for_i文件夹下
-                    fcca = open(path_saveNew + '\\for_' + str(i + 1) + "\\del_cca_info.csv", 'a')
-                    '''cca传入原始数据集的目录，recca的目录，delcca的目录'''
+        for name in pathdir_original:#对文件名进行循环
+            if os.path.isfile(path_original + "\\" + name):#如果name是一个文件，这里传入的路径必须是绝对路径才可以判断
+                dataSet = based.loadSample(path_original + "\\" + name)#加载文件数据
+                X, y = based.Split(dataSet)#方便smote采样
+                for i in range(m):#循环采样，每一次采样结果存放在for_i文件夹下
+                    f=open(path_saveNew + '\\for_'+str(i+1)+"\\del_smote_info.csv",'a')
+                    sm=Smote()
+                    tab=sm.My_smote(X, y, path_saveNew + '\\for_'+str(i+1)+'\\re_SMOTE_' + name)
+                    '''cca传入reamote的目录，recca的目录，delcca的目录'''
                     cca = CCA()
-                    cca.My_cca(path_original + "\\" + name,  # 原始cca输入的文件
-                               path_saveNew + "\\for_" + str(i + 1) + '\\re_CCA_' + name,  # cca重采样之后的文件
-                               path_saveNew + "\\for_" + str(i + 1) + '\\del_cca_' + name,  # cca采样删除的文件
-                               fcca, name)  # 用于存储删除的信息
-                #
-            else:  # 如果name是一个文件夹
-                path1 = path_original + "\\" + name  # 更新原始数据集路径
-                os.mkdir(path_saveNew + "\\" + name)  # 创建和原始数据集文件夹一致的文件夹，用于保存采样的结果
-                path2 = path_saveNew + "\\" + name  # 更新保存数据的路径为新创建的文件夹
-                for i in range(m):  # 在这个文件夹中创建存放每一次循环采样结果的文件夹
-                    os.mkdir(path2 + "\\for_" + str(i + 1))
-                self.run_dir(path1, path2)  # 调用循环采样的方法，循环调用
+                    cca.My_cca(path_saveNew+"\\for_"+str(i+1)+'\\re_SMOTE_' + name,#cca读入的样本
+                               path_saveNew+"\\for_"+str(i+1)+'\\re_SMOTE_CCA_' + name,#重采样写入的样本
+                               path_saveNew+"\\for_"+str(i+1)+'\\del_old_' + name,#cca删除的样本，其中的原始样本
+                               path_saveNew + "\\for_" + str(i + 1) + '\\del_new_' + name,#cca删除的样本，其中的smote合成的样本
+                               f,#清除样本的信息
+                                tab,name)
+                    f.close()
+
+#
+            else:#如果name是一个文件夹
+                path1 = path_original + "\\" + name#更新原始数据集路径
+                os.mkdir(path_saveNew + "\\" + name)#创建和原始数据集文件夹一致的文件夹，用于保存采样的结果
+                path2 = path_saveNew + "\\" + name#更新保存数据的路径为新创建的文件夹
+                for i in range(m):#在这个文件夹中创建存放每一次循环采样结果的文件夹
+                    os.mkdir(path2+"\\for_"+str(i+1))
+
+                self.run_dir(path1, path2)#调用循环采样的方法，循环调用
 
 
 if __name__ == '__main__':
@@ -297,9 +389,9 @@ if __name__ == '__main__':
     # cca.My_cca('C:\\Users\Administrator\Desktop\\test_dic\EasyEnsemble\\re_SMOTE_abalone_0_7.csv',
     #            'C:\\Users\Administrator\Desktop\\test_dic\EasyEnsemble\\re_cca_abalone_0_7.csv',
     #            'C:\\Users\Administrator\Desktop\\test_dic\EasyEnsemble\\del_cca_abalone_0_7.csv')
-    m = int(input("请输入循环次数："))
-    path_original = 'E:\Papers_dataset\OriginalDataSet'
-    path_saveNew = 'C:\\Users\Administrator\Desktop\CCA_all'
-    dic = Director()
-    dic.run_dir(path_original, path_saveNew)
-    toArff.run_dir(path_saveNew, 'C:\\Users\Administrator\Desktop\CCA_all_arff')
+    m=int(input("请输入循环次数："))
+    path_original='E:\Papers_dataset\OriginalDataSet'
+    path_saveNew='E:\Papers_dataset\ResempledDataSet\CCA_all_1'
+    dic=Director()
+    dic.run_dir(path_original,path_saveNew)
+    toArff.run_dir(path_saveNew,'E:\Papers_dataset\ResempledDataSet\CCA_all_1_arff')

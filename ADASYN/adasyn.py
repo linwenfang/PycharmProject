@@ -60,9 +60,9 @@ class Ada:
 
 if __name__ == '__main__':
     m = int(input("请输入采样次数："))
-    path_originial = "E:\\Papers_dataset\\OriginalDataSet"  # 存放原始数据文件的文件夹
-    path_saveNew = "E:\\Papers_dataset\\ResempledDataSet\\ADASYN"  # 存放新采样过后的文件的文件夹
+    path_originial = "C:\\Users\Administrator\Desktop\\others"  # 存放原始数据文件的文件夹
+    path_saveNew = "C:\\Users\Administrator\Desktop\\re_others"  # 存放新采样过后的文件的文件夹
     ada_syn = Ada()
     ada = ADASYN()
     ada_syn.run_dir(path_originial, path_saveNew)  # 传入原始数据集文件夹和保存重采样数据集文件夹即可
-    toArff.run_dir(path_saveNew,"E:\\Papers_dataset\\ResempledDataSet\\ADASYN_arff")
+    # toArff.run_dir(path_saveNew,"E:\\Papers_dataset\\ResempledDataSet\\ADASYN_arff")

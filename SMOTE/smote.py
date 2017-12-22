@@ -1,59 +1,70 @@
+# coding=gbk
 
 from imblearn.over_sampling import SMOTE
 import numpy as np
 import re
+import os
+from LearningText import toArff
+
+# Generate the dataset
+class Bsmote:
+    def loadSample(self, path):
+        file = open(path, 'r')
+        '''¶ÁÈ¡ÎÄ¼şµÄÄÚÈİ£¬readlines·µ»ØµÄÊÇÒ»¸öÁĞ±í'''
+        contain = file.readlines()
+        count = len(contain)  # ÕâÊÇÎÄ¼ş¹²ÓĞcountĞĞ
+        '''´´½¨Ò»¸öcount x len(contain[0].split(','))-1µÄ¾ØÕó,ÆäÖĞlen(contain[0].split(','))-1ÊÇÑù±¾ÊôĞÔµÄ¸öÊı'''
+        features = np.zeros((count, len(re.split(r'[ ,;:\t]+', contain[0])) - 1))
+        labels = []
+        index = 0
+        for line in contain:  # Ò»ĞĞĞĞ¶ÁÊı¾İÎÄ¼ş
+            line = line.strip()  # É¾³ılineÍ·ºÍÎ²µÄ¿Õ¸ñ
+            listFormLine = re.split(r'[ ,;:\t]+', line)  # Ö¸¶¨','Îª·Ö¸ô·û£¬½«line·Ö¸î¿ª
+            '''½«listFormLineÖĞµÄÇ°len(len(listFormLine)-1)ÁĞ¼ÓÈëµ½¾ØÕóÖĞÈ¥'''
+            features[index:] = listFormLine[0:len(listFormLine) - 1]
+            labels.append(listFormLine[-1])  # ×îºóÒ»ÁĞ×÷ÎªÀà±ê
+            index += 1
+            '''·µ»ØµÄfeaturesÎªÌØÕ÷¾ØÕó£¬labelsÎªÀà±ğÁĞ±í'''
+        labels = np.array([int(x) for x in labels])
+        file.close()
+        return features, labels
+
+    def write_resample(self, path, resampled):
+        f = open(path, 'w')
+        for i in range(len(resampled)):
+            for j in range(len(resampled[i])):
+                if j < len(resampled[i]) - 1:
+                    f.write(str(resampled[i][j]) + ',')
+                else:
+                    f.write(str(resampled[i][j]))
+            f.write('\n')
+        f.close()
+
+    def run_dir(self, path_original, path_saveNew):
+        pathdir_original = os.listdir(path_original)  # ÁĞ³öÔ­Ê¼Ñù±¾ÎÄ¼ş¼ĞÏÂµÄÎÄ¼şÃûºÍÎÄ¼ş¼ĞÃû
+        for name in pathdir_original:  # ¶ÔÎÄ¼şÃû½øĞĞÑ­»·
+            if os.path.isfile(path_original + "\\" + name):  # Èç¹ûnameÊÇÒ»¸öÎÄ¼ş£¬ÕâÀï´«ÈëµÄÂ·¾¶±ØĞëÊÇ¾ø¶ÔÂ·¾¶²Å¿ÉÒÔÅĞ¶Ï
+                X, y = self.loadSample(path_original + "\\" + name)  # ¼ÓÔØÎÄ¼şÊı¾İ
+                for i in range(m):  # Ñ­»·²ÉÑù£¬Ã¿Ò»´Î²ÉÑù½á¹û´æ·ÅÔÚfor_iÎÄ¼ş¼ĞÏÂ
+                    X_resampled, y_resampled = bsmote.fit_sample(X, y)
+                    y_resampled = y_resampled[:, np.newaxis]
+                    resampled = np.hstack((X_resampled, y_resampled)).tolist()
+                    self.write_resample(path_saveNew + '\\for_' + str(i + 1) + '\\re_bsmote_' + name, resampled)
+            else:  # Èç¹ûnameÊÇÒ»¸öÎÄ¼ş¼Ğ
+                path1 = path_original + "\\" + name  # ¸üĞÂÔ­Ê¼Êı¾İ¼¯Â·¾¶
+                os.mkdir(path_saveNew + "\\" + name)  # ´´½¨ºÍÔ­Ê¼Êı¾İ¼¯ÎÄ¼ş¼ĞÒ»ÖÂµÄÎÄ¼ş¼Ğ£¬ÓÃÓÚ±£´æ²ÉÑùµÄ½á¹û
+                path2 = path_saveNew + "\\" + name  # ¸üĞÂ±£´æÊı¾İµÄÂ·¾¶ÎªĞÂ´´½¨µÄÎÄ¼ş¼Ğ
+                for i in range(m):  # ÔÚÕâ¸öÎÄ¼ş¼ĞÖĞ´´½¨´æ·ÅÃ¿Ò»´ÎÑ­»·²ÉÑù½á¹ûµÄÎÄ¼ş¼Ğ
+                    os.mkdir(path2 + "\\for_" + str(i + 1))
+                self.run_dir(path1, path2)  # µ÷ÓÃÑ­»·²ÉÑùµÄ·½·¨£¬Ñ­»·µ÷ÓÃ
 
 
-file = open("E:\PycharmProjects\Learning_Notes\DataSet\\Imbalanced Data.csv", 'r')
-'''è¯»å–æ–‡ä»¶çš„å†…å®¹ï¼Œreadlinesè¿”å›çš„æ˜¯ä¸€ä¸ªåˆ—è¡¨'''
-contain = file.readlines()
-count = len(contain)  # è¿™æ˜¯æ–‡ä»¶å…±æœ‰countè¡Œ
-'''åˆ›å»ºä¸€ä¸ªcount x len(contain[0].split(','))-1çš„çŸ©é˜µ,å…¶ä¸­len(contain[0].split(','))-1æ˜¯æ ·æœ¬å±æ€§çš„ä¸ªæ•°'''
-features = np.zeros((count, len(re.split(r'[ ,;:\t]+', contain[0])) - 1))
-labels = []
-index = 0
-for line in contain:  # ä¸€è¡Œè¡Œè¯»æ•°æ®æ–‡ä»¶
-    line = line.strip()  # åˆ é™¤lineå¤´å’Œå°¾çš„ç©ºæ ¼
-    listFormLine = re.split(r'[ ,;:\t]+', line)  # æŒ‡å®š','ä¸ºåˆ†éš”ç¬¦ï¼Œå°†lineåˆ†å‰²å¼€
-    '''å°†listFormLineä¸­çš„å‰len(len(listFormLine)-1)åˆ—åŠ å…¥åˆ°çŸ©é˜µä¸­å»'''
-    features[index:] = listFormLine[0:len(listFormLine) - 1]
-    labels.append(listFormLine[-1])  # æœ€åä¸€åˆ—ä½œä¸ºç±»æ ‡
-    index += 1
-    '''è¿”å›çš„featuresä¸ºç‰¹å¾çŸ©é˜µï¼Œlabelsä¸ºç±»åˆ«åˆ—è¡¨'''
-labels=np.array([int(x) for x in labels])
-file.close()
-X=features
-y=labels
-kind = ['regular', 'borderline1', 'borderline2', 'svm']
-sm = [SMOTE(kind=k) for k in kind]
-X_resampled = []
-y_resampled = []
-X_res, y_res = sm[0].fit_sample(X, y)
-X_resampled.append(X_res)
-y_resampled.append(y_res)
-y_resampled=y_resampled[0]
-X_resampled=X_resampled[0]
-y_resampled=y_resampled[:,np.newaxis]
+if __name__ == '__main__':
+    m = int(input("ÇëÊäÈë²ÉÑù´ÎÊı£º"))
+    path_originial = "E:\\Papers_dataset\\OriginalDataSet"  # ´æ·ÅÔ­Ê¼Êı¾İÎÄ¼şµÄÎÄ¼ş¼Ğ
+    path_saveNew = "E:\\Papers_dataset\\ResempledDataSet\\BorderSMOTE"  # ´æ·ÅĞÂ²ÉÑù¹ıºóµÄÎÄ¼şµÄÎÄ¼ş¼Ğ
+    Bor_smote = Bsmote()
+    bsmote = SMOTE(kind='borderline1')
+    Bor_smote.run_dir(path_originial, path_saveNew)  # ´«ÈëÔ­Ê¼Êı¾İ¼¯ÎÄ¼ş¼ĞºÍ±£´æÖØ²ÉÑùÊı¾İ¼¯ÎÄ¼ş¼Ğ¼´¿É
+    toArff.run_dir(path_saveNew,"E:\\Papers_dataset\\ResempledDataSet\\BorderSMOTE_arff")
 
-tab=[]
-for i in range(len(X_resampled)):
-    if i <len(X):
-        tab.append(0)
-    else:tab.append(1)
-resampled=np.hstack((X_resampled,y_resampled)).tolist()
-
-
-
-f=open("re_SMOTE_Imbalanced.csv",'w')
-for i in range(len(resampled)):
-    for j in range(len(resampled[i])):
-        if j<len(resampled[i])-1:
-            f.write(str(resampled[i][j])+',')
-        else:f.write(str(resampled[i][j]))
-    f.write('\n')
-f.close()
-count=0
-for i in tab:
-    if i==0:
-        count+=1
-print(count)

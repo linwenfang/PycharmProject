@@ -6,9 +6,10 @@ def run_dir(path_original, path_saveNew):
     pathdir_original = os.listdir(path_original)  # 列出原始样本文件夹下的文件名和文件夹名
     for name in pathdir_original:  # 对文件名进行循环
         if os.path.isfile(path_original + "\\" + name):  # 如果name是一个文件，这里传入的路径必须是绝对路径才可以判断
-            if name[-5:]=='.arff':
-                continue
-            elif name=='del_smote_info.csv' or name=='del_cca_info.csv':
+            # if name[-5:]=='.arff':
+            #     continue
+            print(path_original + "\\" + name)
+            if name=='del_smote_info.csv' or name=='del_cca_info.csv':
                 continue
             else:
                 os.rename(path_original + "\\" + name,path_original + "\\" + name[:-4]+'.arff')# 改文件名
@@ -55,6 +56,6 @@ def run_dir(path_original, path_saveNew):
             run_dir(path1, path2)  # 调用循环采样的方法，循环调用
 if __name__ == '__main__':
 
-    path_original="C:\\Users\Administrator\Desktop\\test_dic"
-    path_saveNew="C:\\Users\Administrator\Desktop\\test_dic_arff"
+    path_original="E:\Papers_dataset\ResempledDataSet\CCA_all_1_arff"
+    path_saveNew="E:\Papers_dataset\ResempledDataSet\CCA_all_2_arff"
     run_dir(path_original,path_saveNew)

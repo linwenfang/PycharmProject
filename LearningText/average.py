@@ -25,9 +25,9 @@ def aver(path):
             path1=path+"\\"+name
             aver(path1)
 if __name__ == '__main__':
-    path="E:\Papers_dataset\Experiment\MWMOTE\\SMOTE+TonekLink"
-    path_collec="E:\Papers_dataset\Experiment\MWMOTE\\SMOTE+TonekLink\\collec.csv"
-    path_std="E:\Papers_dataset\Experiment\MWMOTE\\SMOTE+TonekLink\\std.csv"
+    path="C:\\Users\Administrator\Desktop\ex_20171217"
+    path_collec="C:\\Users\Administrator\Desktop\ex_20171217\\collec.csv"
+    path_std="C:\\Users\Administrator\Desktop\ex_20171217\\std.csv"
     aver(path)
     geth=list()
     collec=np.array(collec)
